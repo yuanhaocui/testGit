@@ -2,3 +2,5 @@ git is a distributed  version control ststem
 git is a free software distributed on GPL
 
 make some change
+
+add a new line on branch dev
