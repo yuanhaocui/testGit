@@ -1,1 +1,1 @@
-xian you hao ge hou you tian
+This is a repository to learn git;
