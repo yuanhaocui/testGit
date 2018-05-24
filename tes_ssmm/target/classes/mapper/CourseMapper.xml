@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tarena.dao.CourseMapper">
+	<resultMap type="Course" id="courseMap">
+		<id property="id" column="course_id" jdbcType="VARCHAR"/>
+		<result property="name" column="course_name"/>
+		<result property="picture" column="course_picture"/>
+		<result property="order" column="course_order"/>
+		<result property="regDate" column="course_regdate"/>
+		<result property="desc" column="course_desc"/>
+	</resultMap>
+	<select id="getCount" parameterType="Page" resultType="java.lang.Integer">
+		select 
+			count(course_id)
+		from 
+			t_course
+		where 
+			course_name like #{courseKeyword}
+	</select>
+	<select id="getCourses" parameterType="Page" resultMap="courseMap">
+		select 	
+				course_id,
+				course_name,
+				course_picture,
+				course_order,
+				course_regdate,
+				course_desc
+		from
+				t_course
+		where 
+				course_name like #{courseKeyword}
+		limit 	#{begin},#{pageSize}
+	</select>
+	<delete id="deleteCourse" parameterType="string">
+		delete from t_course where course_id=#{id}
+	</delete>
+	<insert id="addCourse" parameterType="Course">
+		insert into 
+			t_course
+			(
+				course_id,
+				course_name,
+				course_picture,
+				course_order,
+				course_desc
+			) 
+			values
+			(
+				#{id},
+				#{name},
+				#{picture},
+				#{order},
+				#{desc}
+			)
+	</insert>
+	<update id="updateCourse" parameterType="Course">
+		update 
+			t_course 
+		set 
+			course_name=#{name},
+			course_order=#{order},
+			course_desc=#{desc},
+			course_picture=#{picture} 
+		where 
+			course_id=#{id}
+	</update>
+	<!-- 查询所有的课程名称（在显示更新视频Modal时，用select表单元素显示所有课程名称） -->
+	<select id="findAllCourseName" resultType="Course">
+		select 
+			course_id as id,
+			course_name as name
+		from t_course 
+	</select>
+</mapper>

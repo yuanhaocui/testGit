@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tarena.dao.ActivityMapper">
+
+		
+	<select id="findActivityIds" parameterType="string" resultType="string">
+		select activity_id from t_activity where user_id=#{userId}
+	</select>
+	<delete id="deleteActivityByUserId" parameterType="string">
+		delete from t_activity where user_id=#{userId}
+	</delete>
+	
+	<resultMap type="User" id="userMap">
+		<id property="id" column="user_id"/>
+		<result property="nickName" column="user_nickname"/>
+	</resultMap>
+	<resultMap type="Course" id="courseMap">
+		<id property="id" column="course_id"/>
+		<result property="name" column="course_name"/>
+	</resultMap>
+	<resultMap type="Activity" id="activityMap">
+		<id property="id" column="activity_id" jdbcType="VARCHAR"/>
+		<result property="title" column="activity_title"/>
+		<result property="date" column="activity_date"/>
+		<result property="longitude" column="longitude"/>
+		<result property="latitude" column="latitude"/>
+		<result property="location" column="activity_location"/>
+		<result property="persons" column="activity_persons"/>
+		<result property="cost" column="activity_cost"/>
+		<result property="picture" column="activity_picture"/>
+		<result property="details" column="activity_details"/>
+		<result property="ispass" column="activity_ispass"/>
+		<collection property="user" ofType="User" javaType="User"
+					resultMap="userMap"></collection>
+		<collection property="course" ofType="Course" javaType="Course"
+					resultMap="courseMap"></collection>
+	</resultMap>
+	<!-- message的resultMap -->
+	<resultMap type="Message" id="messageMap">
+		<id property="id" column="id"/>
+		<result property="titles" column="title"/>
+		<result property="content" column="content"/>
+		<result property="time" column="time"/>
+		<result property="nickName" column="nickName"/>
+		<association property="user" column="user_id" javaType="User" resultMap="userMap"></association>
+	</resultMap>
+	<select id="getCount" parameterType="Page" resultType="java.lang.Integer">
+		select 
+			count(activity_id)
+		from
+			t_activity
+		where
+			activity_title like #{activityKeyword}
+	</select>
+	<select id="getActivitys" parameterType="Page" resultMap="activityMap">
+		select 
+			a.activity_id,
+			a.activity_title,
+			a.activity_date,
+			a.longitude,
+			a.latitude,
+			a.activity_location,
+			a.activity_persons,
+			a.activity_cost,
+			a.activity_picture,
+			a.activity_details,
+			a.activity_ispass,
+			u.user_nickname,
+			c.course_name
+		from 
+			(
+				select * from t_activity 
+				where activity_title like #{activityKeyword}
+				limit #{begin},#{pageSize}
+			) a
+		left outer join t_user u on a.user_id=u.user_id
+		left outer join t_course c on a.course_id=c.course_id
+	</select>
+	<delete id="deleteActivity" parameterType="string">
+		delete from t_activity where activity_id=#{id}
+	</delete>
+	<insert id="addActivity" parameterType="Activity">
+		insert into 
+			t_activity
+			(
+				activity_id,
+				activity_title,
+				activity_date,
+				longitude,
+				latitude,
+				activity_location,
+				activity_persons,
+				activity_cost,
+				activity_picture,
+				activity_details,
+				activity_ispass,
+				user_id,
+				course_id
+			)
+		values
+			(
+				#{id},
+				#{title},
+				#{date},
+				#{longitude},
+				#{latitude},
+				#{location},
+				#{persons},
+				#{cost},
+				#{picture},
+				#{details},
+				#{ispass},
+				#{userName},
+				#{courseName}
+			)
+	</insert>
+	<update id="updateActivity" parameterType="Activity">
+		update 
+			t_activity
+		set 
+			activity_title=#{title},
+			activity_date=#{date},
+			longitude=#{longitude},
+			latitude=#{latitude},
+			activity_location=#{location},
+			activity_persons=#{persons},
+			activity_cost=#{cost},
+			activity_picture=#{picture},
+			activity_details=#{details},
+			user_id=#{userName},
+			course_id=#{courseName}
+		where 
+			activity_id=#{id}
+	</update>
+	<select id="findCourseName" resultType="Course">
+		select course_name name from t_course
+	</select>
+	<select id="getUserId" parameterType="string" resultType="string">
+		select user_id from t_user where user_nickname=#{name}
+	</select>
+	<select id="getCourseId" parameterType="string" resultType="string">
+		select course_id from t_course where course_name=#{name}
+	</select>
+	<!-- 主页消息-->
+	
+	<!-- 查询所有未审核的活动 -->
+	<select id="findActivityByChecked" resultMap="messageMap">
+	select 
+		activity_id as id,
+        '新活动' as titles,
+        activity_title as content,
+        activity_date as time,
+        u.user_nickname as nickName
+    from 
+    	t_activity a
+    inner join t_user u on a.user_id=u.user_id
+    where 
+    	activity_ispass='否'
+	</select>
+	<select id="countNumber" resultType="Integer">
+	select 
+		count(activity_id)
+    from 
+    	t_activity
+    where 
+    	activity_ispass='否'
+	</select>
+	<update id="isPass" parameterType="string">
+		update t_activity set activity_ispass="是" where activity_id=#{activity_id}
+	</update>
+</mapper>

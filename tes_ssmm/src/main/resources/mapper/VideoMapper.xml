@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tarena.dao.VideoMapper">
+
+	<select id="findVideoByUserId" parameterType="string" resultType="string">
+		select video_id from t_video where user_id=#{userId}
+	</select>
+	<delete id="deleteVideoByUserId" parameterType="string">
+		delete from t_video where user_id=#{userId}
+	</delete>
+	<delete id="deleteHistoryCacheByVideo" parameterType="string">
+		delete from t_video where video_id=#{videoId}
+	</delete>
+	<resultMap type="User" id="userMap">
+		<id property="id" column="user_id" jdbcType="VARCHAR"/>
+		<result property="nickName" column="user_nickname"/>
+	</resultMap>
+	<resultMap type="Course" id="courseMap">
+		<id property="id" column="course_id" jdbcType="VARCHAR"/>
+		<result property="name" column="course_name"/>
+	</resultMap>
+	<!-- Message的resultMap -->
+	<resultMap type="Message" id="messageMap">
+		<id property="id" column="id" jdbcType="CHAR"/>
+		<result property="titles" column="title" jdbcType="VARCHAR"/>
+		<result property="content" column="content" jdbcType="VARCHAR"/>
+		<result property="time" column="time" jdbcType="TIMESTAMP"/>
+		<result property="nickName" column="nickName"/>
+		<association property="user" column="user_id" javaType="User" resultMap="userMap"></association>
+	</resultMap>
+	<resultMap type="Video" id="videoMap">
+		<id property="id" column="video_id" jdbcType="VARCHAR"/>
+		<result property="title" column="video_title"/>
+		<result property="picture" column="video_picture"/>
+		<result property="ontime" column="video_ontime"/>
+		<result property="introduction" column="video_introduction"/>
+		<result property="filename" column="video_filename"/>
+		<result property="state" column="video_state" jdbcType="INTEGER" /> 
+		<result property="special" column="video_special"/>
+		<result property="difficulty" column="video_difficulty"/>
+		<result property="forsale" column="video_forsale"/>
+		<collection property="user" ofType="User" javaType="User"
+					resultMap="userMap"></collection>
+		<collection property="course" ofType="Course" javaType="Course"
+					resultMap="courseMap"></collection>
+	</resultMap>
+	<select id="getCount" parameterType="Page" resultType="java.lang.Integer">
+		select count(video_id) from t_video where video_title like #{videoKeyword}
+	</select>
+	<!-- 主页显示 -->
+	
+	<!-- 主页消息 -->
+	<!-- 查询所有未审核的视频 -->
+	<select id="findVideoByChecked" resultMap="messageMap">
+	select 
+		video_id as id,
+		'新视频' as titles,
+	  video_title as content,
+	    video_ontime as time,
+	    u.user_nickname as nickName
+	from 
+		t_video v
+	inner join t_user u on v.user_id=u.user_id
+   	where 
+   		v.video_state=2
+	</select>
+	<select id="getVideos" parameterType="Page" resultMap="videoMap">
+		select 	
+				video_id,
+				video_title,
+				video_picture,
+				video_ontime,
+				video_introduction,
+				video_filename
+		from
+				t_video
+		where
+				video_title like #{videoKeyword} 
+		limit 
+				#{begin},
+				#{pageSize}
+	</select>
+	<select id="findVideoById" parameterType="string" resultMap="videoMap">
+		select 
+			v.video_title,
+			v.video_filename,
+			c.course_name,
+			u.user_nickname,
+			v.video_special,
+			v.video_difficulty,
+			v.video_ontime,
+			v.video_forsale,
+			v.video_state,
+			v.video_introduction
+		from
+			(
+				select * from t_video where video_id=#{videoid}
+			) v 
+		left outer join t_user u on v.user_id=u.user_id
+		left outer join t_course c on v.course_id=c.course_id
+		
+	</select>
+	
+	<!-- 查询指定课程名的是视频数量 -->
+	<select id="findVideoCountByCourseName"  resultType="java.lang.Integer" parameterType="java.lang.String" >
+	select 
+		count(video_id) as geShu
+	from 
+		t_video v
+    inner join t_course c on v.course_id=c.course_id
+    where 
+    	c.course_name=#{name}
+	</select>
+	<!-- 根据视频id删除历史缓存表 -->
+	<delete id="deleteHistoryCacheByVideoId" parameterType="java.lang.String">
+	delete 
+		from t_history_cache_collection_purchased
+	where 
+		video_id =#{videoId}
+	</delete>
+	<!-- 根据删除视频 -->
+	<delete id="deleteVideo" parameterType="java.lang.String">
+	delete 
+		from t_video
+	where 
+		user_id =#{userId}
+	</delete>
+	
+	<delete id="deleteVideoById" parameterType="string">
+	delete 
+		from t_video
+	where 
+		video_id =#{arg0}
+	</delete>
+	
+	<delete id="deleteVideoByCommentId" parameterType="string">
+	delete 
+		from t_comment
+	where 
+		video_id =#{videoId}
+	</delete>
+	
+	<select id="showCourseName" resultType="Course">
+		select course_name name from t_course
+	</select>
+	
+	<select id="showUserName" resultType="User">
+		select user_nickname nickName from t_user
+	</select>
+	
+	<update id="updateVideo" parameterType="Video">
+		update t_video set
+			video_title=#{title}, 
+			video_picture=#{picture},
+			video_ontime=#{ontime},
+			video_introduction=#{introduction},
+			course_id=#{courseName},
+			user_id=#{userNickname},
+			video_special=#{special},
+			video_difficulty=#{difficulty},
+			video_forsale=#{forsale}
+		where video_id=#{id}
+	</update>
+	<select id="getCourseId" parameterType="string" resultType="string">
+		select course_id from t_course where course_name=#{courseName}
+	</select>
+	<select id="getUserId" parameterType="string" resultType="string">
+		select user_id from t_user where user_nickname=#{userName}
+	</select>
+	
+	<update id="updateState" parameterType="string">
+		update t_video set
+			video_state=6
+		where video_id=#{id}
+	</update>
+	<select id="countNumber" resultType="Integer">
+		select count(video_id) from t_video where video_state=2
+	</select>
+</mapper>

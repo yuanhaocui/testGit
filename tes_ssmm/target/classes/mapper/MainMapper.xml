@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tarena.dao.MainMapper">
+<resultMap type="User" id="userMap">
+		<id property="id" column="user_id" jdbcType="VARCHAR"/>
+		<result property="loginName" column="user_loginname"/>
+		<result property="loginType" column="user_logintype"/>
+		<result property="nickName" column="user_nickname"/>
+		<result property="password" column="user_password"/>
+		<result property="type" column="user_type"/>
+		<result property="head" column="user_head"/>
+		<result property="score" column="user_score"/>
+		<result property="isLock" column="user_islock"/>
+		<result property="pwdState" column="user_pwdstate"/>
+		<result property="regDate" column="user_regdate"/>
+		<result property="loginName" column="user_loginname"/>
+		<result property="age" column="user_age"/>
+		<result property="sex" column="user_sex"/>
+		<result property="introduction" column="user_introduction"/>
+		<collection property="roles" ofType="Role" javaType="java.util.List"
+					resultMap="roleMap"></collection>
+	</resultMap>
+	<!-- 今日动态 -->
+	
+	<!-- 注册用户 -->
+	<select id="getUserCount"  resultType="java.lang.Integer">
+		select
+			count(user_id) as geShu 
+		from t_user 
+	</select>
+	<!-- 上传视频 -->
+	<select id="uploadVideo"  resultType="java.lang.Integer" >
+		select 
+			count(video_id) as geShu 
+		from t_video 
+	</select>
+	<!-- 收藏视频 -->
+	<select id="collectVideo"  resultType="java.lang.Integer" >
+		select 
+			count(hccp_id) as geShu 
+		from 
+			t_history_cache_collection_purchased 
+		where 
+			is_collection='是'
+	</select>
+	<!-- 购买视频 -->
+	<select id="buyVideo"  resultType="java.lang.Integer" >
+		select 
+			count(hccp_id) as geShu 
+		from
+			t_history_cache_collection_purchased 
+		where 
+			is_purchased='是'
+	</select>
+	<!-- 最新活动 -->
+	<select id="newActivity" resultType="java.lang.Integer">
+		select 
+			count(activity_id)
+        from
+        	t_activity
+        where
+        	activity_ispass='否'
+	</select>
+	<!-- 最新评论 -->
+	<select id="newComment" resultType="java.lang.Integer">
+		select 
+			count(comment_id)
+		from
+			t_comment 
+        where
+        	comment_ispass ='否'
+	</select>
+
+
+
+
+	<!-- 视频统计图-->
+	
+
+	
+	<!-- 增长率 -->
+	
+	<!-- 用户增长率 -->
+	<!-- 
+	1、计算当前月数据
+	select count(user_id) from t_user where date_format(user_regdate,'%Y%m')=date_format(now(),'%Y%m');
+	2、计算上一月数据
+	select count(user_id) FROM t_user where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(user_regdate,'%Y%m' ))=1;
+	3、计算当前季度数据
+	select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(now());
+	4、计算上一季度数据
+	select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(DATE_SUB(now(),interval 1 QUARTER));
+	5、计算上一年当前月数据
+	select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and month(user_regdate)=month(now());
+	6、计算上一年当前季度数据
+	select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and QUARTER(user_regdate)=QUARTER(now());
+        
+         计算格式：
+         select  floor( 
+                       	((()-())/())*100
+                      ) as geShu
+                      
+         select case when floor( 
+                       	(
+                       	    (
+                       	    	()-
+                       	    	()
+                       	    )/
+                       	        ()
+                       	)*100
+                      ) is null then 2147483647
+                  end as geShu
+                      
+    如果返回值为 2147483647则说明分母为0
+	 -->
+	<!-- 计算月环比 -->
+	<!-- 
+		/*
+		 * 月环比：
+		 * 		（当前月数据-上一月数据）/上一月数据*100%
+		 * date_format :把日期转换为字符串格式
+		 * PERIOD_DIFF：两个月之间的差
+		 */
+	 -->
+	<select id="userMonthBasis"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from t_user where date_format(user_regdate,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(user_id) FROM t_user where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(user_regdate,'%Y%m' ))=1)
+                       	    )/
+                       	        (select count(user_id) FROM t_user where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(user_regdate,'%Y%m' ))=1)
+                       	)*100
+                      ) is null then 2147483647  
+                                else floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from t_user where date_format(user_regdate,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(user_id) FROM t_user where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(user_regdate,'%Y%m' ))=1)
+                       	    )/
+                       	        (select count(user_id) FROM t_user where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(user_regdate,'%Y%m' ))=1)
+                       	)*100
+                      ) 
+                  end as geShu
+	</select>
+	<!-- 计算月同比 -->
+	<!-- 
+		/*
+		 * 月同比：
+		 * 		（当前月数据-上一年当前月数据）/上一年当前月数据*100%
+		 */
+	 -->
+	<select id="userSameMonth"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from t_user where date_format(user_regdate,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and month(user_regdate)=month(now()))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and month(user_regdate)=month(now()))
+                       	)*100
+                      ) is null then 2147483647 
+                                else  floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from t_user where date_format(user_regdate,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and month(user_regdate)=month(now()))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and month(user_regdate)=month(now()))
+                       	)*100
+                      )
+                  end as geShu
+	</select>
+	<!-- 计算季环比 -->
+	<!-- 
+		/*
+		 * QUARTER：季度
+		 */
+	 -->
+	<select id="userQuarterBasis"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(now()))-
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	)*100
+                      ) is null then 2147483647
+                                else floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(now()))-
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	)*100
+                      )
+                  end as geShu
+	</select>
+	<!-- 计算季同比 -->
+	<select id="userSameQuarter"  resultType="java.lang.Integer">
+		select case when floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(now()))-
+                       	    	(select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and QUARTER(user_regdate)=QUARTER(now()))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and QUARTER(user_regdate)=QUARTER(now()))
+                       	)*100
+                      ) is null then 2147483647
+                                else  floor( 
+                       	(
+                       	    (
+                       	    	(select count(user_id) from `t_user` where QUARTER(user_regdate)=QUARTER(now()))-
+                       	    	(select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and QUARTER(user_regdate)=QUARTER(now()))
+                       	    )/
+                       	        (select count(user_id) from `t_user` where year(user_regdate)=year(date_sub(now(),interval 1 year)) and QUARTER(user_regdate)=QUARTER(now()))
+                       	)*100
+                      )
+                  end as geShu 
+	</select>
+	<!-- 视频增长率 -->
+	<!-- 
+	1、计算当前月数据
+	select count(video_id) from t_video where date_format(video_ontime,'%Y%m')=date_format(now(),'%Y%m');
+	2、计算上一月数据
+	select count(video_id) FROM t_video where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(video_ontime,'%Y%m' ))=1;
+	3、计算当前季度数据
+	select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(now());
+	4、计算上一季度数据
+	select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(DATE_SUB(now(),interval 1 QUARTER));
+	5、计算上一年当前月数据
+	select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and month(video_ontime)=month(now());
+	6、计算上一年当前季度数据
+	select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and QUARTER(video_ontime)=QUARTER(now());
+        
+         计算格式：
+         select  floor( 
+                       	((()-())/())*100
+                      ) as geShu
+                      
+         select case when floor( 
+                       	(
+                       	    (
+                       	    	()-
+                       	    	()
+                       	    )/
+                       	        ()
+                       	)*100
+                      ) is null then 2147483647
+                  end as geShu
+                      
+    如果返回值为 2147483647则说明分母为0
+	 -->
+	<!-- 计算月环比 -->
+		<!-- 
+		/*
+		 * 月环比：
+		 * 		（当前月数据-上一月数据）/上一月数据*100%
+		 * date_format :把日期转换为字符串格式
+		 * PERIOD_DIFF：两个月之间的差
+		 */
+	 -->
+	<select id="videoMonthBasis"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from t_video where date_format(video_ontime,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(video_id) FROM t_video where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(video_ontime,'%Y%m' ))=1)
+                       	    )/
+                       	        (select count(video_id) FROM t_video where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(video_ontime,'%Y%m' ))=1)
+                       	)*100
+                      ) is null then 2147483647  
+                                else floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from t_video where date_format(video_ontime,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(video_id) FROM t_video where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(video_ontime,'%Y%m' ))=1)
+                       	    )/
+                       	        (select count(video_id) FROM t_video where PERIOD_DIFF(date_format(now( ),'%Y%m'),date_format(video_ontime,'%Y%m' ))=1)
+                       	)*100
+                      ) 
+                  end as geShu
+	</select>
+	<!-- 计算月同比 -->
+	<!-- 
+		/*
+		 * 月同比：
+		 * 		（当前月数据-上一年当前月数据）/上一年当前月数据*100%
+		 */
+	 -->
+	<select id="videoSameMonth"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from t_video where date_format(video_ontime,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and month(video_ontime)=month(now()))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and month(video_ontime)=month(now()))
+                       	)*100
+                      ) is null then 2147483647 
+                                else  floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from t_video where date_format(video_ontime,'%Y%m')=date_format(now(),'%Y%m'))-
+                       	    	(select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and month(video_ontime)=month(now()))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and month(video_ontime)=month(now()))
+                       	)*100
+                      )
+                  end as geShu
+
+	</select>
+	<!-- 计算季环比 -->
+	<!-- 
+		/*
+		 * QUARTER：季度
+		 */
+	 -->
+	<select id="videoQuarterBasis"  resultType="java.lang.Integer">
+		select case when  floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(now()))-
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	)*100
+                      ) is null then 2147483647
+                                else floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(now()))-
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(DATE_SUB(now(),interval 1 QUARTER)))
+                       	)*100
+                      )
+                  end as geShu
+	</select>
+	<!-- 计算季同比 -->
+	<select id="videoSameQuarter"  resultType="java.lang.Integer">
+		select case when floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(now()))-
+                       	    	(select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and QUARTER(video_ontime)=QUARTER(now()))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and QUARTER(video_ontime)=QUARTER(now()))
+                       	)*100
+                      ) is null then 2147483647
+                                else  floor( 
+                       	(
+                       	    (
+                       	    	(select count(video_id) from `t_video` where QUARTER(video_ontime)=QUARTER(now()))-
+                       	    	(select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and QUARTER(video_ontime)=QUARTER(now()))
+                       	    )/
+                       	        (select count(video_id) from `t_video` where year(video_ontime)=year(date_sub(now(),interval 1 year)) and QUARTER(video_ontime)=QUARTER(now()))
+                       	)*100
+                      )
+                  end as geShu 
+	</select>
+	
+	<!-- 视频排行 -->
+	
+	<!-- 视频收藏排行 -->
+	<select id="collectionVideoOrder"  resultType="Main">
+		select 
+			count(hccp_id) as number,
+            v.video_title as name
+        from 
+        	t_history_cache_collection_purchased hccp
+        inner join t_video v on hccp.video_id=v.video_id
+        where 
+        	hccp.is_collection='是'
+        group by v.video_title
+        order by number desc
+        limit 10
+	</select>
+	<!-- 视频购买排行 -->
+	<select id="purchasedVideoOrder"  resultType="Main">
+		select 
+			count(hccp_id) as number,
+            v.video_title as name
+        from 
+        	t_history_cache_collection_purchased hccp
+        inner join t_video v on hccp.video_id=v.video_id
+        where 
+        	hccp.is_purchased='是'
+        group by v.video_title
+        order by number desc
+        limit 10
+	</select>
+</mapper>

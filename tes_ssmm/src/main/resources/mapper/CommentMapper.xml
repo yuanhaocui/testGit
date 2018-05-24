@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tarena.dao.CommentMapper">
+	<delete id="deleteCommentByUserId" parameterType="string">
+		delete from t_comment where user_id=#{userId}
+	</delete>
+	<delete id="deleteCommentByVideoId" parameterType="string">
+		delete from t_comment where video_id=#{videoId}
+	</delete>
+	
+	<select id="getTimeShowComment" parameterType="Page" resultType="Comment">
+		select
+			comment_id,
+			comment_content,
+			comment_timestamp,
+			user_nickname,
+			video_title,
+			course_name,
+			comment_ispass
+		from
+			t_comment c left outer join t_course co 
+			on c.course_id=co.course_id
+			left outer join t_user u
+			on c.user_id=u.user_id
+			left outer join t_video v
+			on c.video_id=v.video_id
+		limit #{currentPage},#{pageSize}
+	</select>
+	
+	<select id="getCount" parameterType="string" resultType="Integer">
+		select
+			count(m.comment_id)
+		from
+			t_comment m left outer join
+			t_course c on m.course_id=c.course_id
+		where
+			c.course_name like #{commentKeyWord}
+	</select>
+	
+	<select id="getCountCourseName" parameterType="Page" resultType="Integer">
+		select
+			count(comment_id)
+		from
+			t_comment m left outer join
+			t_course c on m.course_id=c.course_id
+		where
+			c.course_name like #{commentKeyword} and
+			m.comment_ispass=#{isPass}
+	</select>
+	
+	<select id="findCommentByPage" parameterType="Page" resultType="Comment">
+		select
+			comment_id,
+			comment_content,
+			comment_timestamp,
+			user_nickname,
+			video_title,
+			course_name,
+			comment_ispass
+		from
+			t_comment m left outer join t_course c 
+			on m.course_id=c.course_id
+			left outer join t_user u
+			on m.user_id=u.user_id
+			left outer join t_video v
+			on m.video_id=v.video_id
+		where
+			c.course_name like #{commentKeyword}
+		limit #{begin},#{pageSize}
+	</select>
+	
+	<select id="findCommentByCourseName" parameterType="Page" resultType="Comment">
+		select
+			comment_id,
+			comment_content,
+			comment_timestamp,
+			user_nickname,
+			video_title,
+			course_name,
+			comment_ispass
+		from
+			t_comment m left outer join t_course c 
+			on m.course_id=c.course_id
+			left outer join t_user u
+			on m.user_id=u.user_id
+			left outer join t_video v
+			on m.video_id=v.video_id
+		where
+			c.course_name like #{commentKeyword} and
+			m.comment_ispass=#{isPass}
+		limit #{begin},#{pageSize}
+	</select>
+	
+	<update id="updateComment" parameterType="string">
+		update t_comment set comment_ispass="是" where comment_id=#{comment_id}
+	</update>
+	
+	<delete id="deleteComment" parameterType="string">
+		delete from t_comment where comment_id=#{comment_id};
+	</delete>
+	
+	<update id="updateCommentIsPass">
+		update t_comment set comment_ispass="是" where comment_ispass="否"
+	</update>
+	
+	<update id="updateCommentNotPass">
+		update t_comment set comment_ispass="否" where comment_ispass="是"
+	</update>
+</mapper>
