@@ -44,4 +44,6 @@ public interface UserMapper {
 	 */
 	
 	public int editPassword(User user);
+
+	public User findUserById(String userId);
 }

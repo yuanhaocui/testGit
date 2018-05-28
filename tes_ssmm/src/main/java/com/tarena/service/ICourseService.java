@@ -25,4 +25,13 @@ public interface ICourseService {
 			  MultipartFile file,
 			  HttpServletRequest request,
 			  HttpServletResponse response);
+
+	public Page findMyCoursesByPage(Page page, String userId);
+
+	public Result deleteMyCourse(String id);
+
+	public Result getAllCourse();
+	public Result addMyCourses(Course course);
+
+	public Result getCourseById(Course course);
 }

@@ -36,5 +36,7 @@ public interface IUserService {
 	 * 修改密码
 	 */
 	public boolean editPassword(User user);
+
+	public boolean findUsersById(String userId);
 	
 }

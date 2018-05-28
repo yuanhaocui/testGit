@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -44,6 +45,7 @@ public class UserController {
 		user.setPassword(password);
 		boolean flag=userService.login(user);
 		if(flag){
+			
 			result.setStatus(0);
 			session.setAttribute("loginName", loginName);
 			online.add(loginName);
@@ -64,6 +66,22 @@ public class UserController {
 		if(page!=null && page.getData()!=null){
 			result.setStatus(0);
 			result.setData(page);
+		}else{
+			result.setStatus(1);
+			result.setMessage("没有查到角色");
+		}
+		return result;
+	}
+	
+	@RequestMapping(value="/query",method=RequestMethod.POST)
+	@ResponseBody
+	public Result findUsersById(HttpServletRequest request){
+		Result result=new Result();
+		String userId = request.getParameter("userId");
+		boolean flag =userService.findUsersById(userId);
+		//System.out.println(page);
+		if(flag==true){
+			result.setStatus(0);
 		}else{
 			result.setStatus(1);
 			result.setMessage("没有查到角色");

@@ -204,6 +204,7 @@ function classchange(id){
 				var div_ele='<div class="embed-responsive embed-responsive-16by9 col-md-9">'+
 		          				'<video  class="embed-responsive-item" src="video/'+video.filename+'" controls>没有找到上传的视频</video >'+
 		          			'</div>'+
+		          			
 			          '<div id="del_div" class="caption col-md-3">'+
 			             '<h3>'+video.title+'</h3>'+
 			             '<p><span>视频路径 : </span>'+video.filename+'</p>'+
